@@ -26,11 +26,20 @@ class IngestionState(TypedDict):
 
     persisted_artifacts: NotRequired[list[dict[str, Any]]]
 
+    indexed_chunk_count: NotRequired[int]
+    indexed_embedding_provider: NotRequired[str]
+    indexed_embedding_model: NotRequired[str]
+    indexed_embedding_dimensions: NotRequired[int]
+
     complexity_score: NotRequired[int]
     should_generate_notes: NotRequired[bool]
     should_generate_visual_notes: NotRequired[bool]
 
+    study_note_id: NotRequired[str]
+    study_notes_generated: NotRequired[bool]
+    visual_note_id: NotRequired[str]
+    visual_notes_generated: NotRequired[bool]
+
     status: NotRequired[str]
     result_payload: NotRequired[dict[str, Any]]
     error: NotRequired[str]
-

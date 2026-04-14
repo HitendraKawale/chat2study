@@ -39,7 +39,7 @@ class IngestionJobRunner:
             workflow = IngestionWorkflow(self.db)
             state = workflow.invoke(str(chat.id), str(job.id))
 
-            chat.status = "captured"
+            chat.status = "ready"
             chat.complexity_score = state.get("complexity_score")
             job.status = "completed"
             job.finished_at = datetime.now(timezone.utc)
@@ -72,4 +72,3 @@ class IngestionJobRunner:
                 self.db.refresh(job)
 
             raise
-

@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from app.db.models import Chat, Source
 from app.services.artifact_manager import ArtifactManager
 from app.services.capture.browser_capture import BrowserCaptureService
+from app.services.indexing import ChatIndexingService
+from app.services.notes import ChatNotesService
 from app.services.providers import ProviderFactory
 from app.workflows.ingestion_state import IngestionState
 
@@ -19,6 +21,8 @@ class IngestionNodes:
         self.db = db
         self.capture = BrowserCaptureService()
         self.artifacts = ArtifactManager(db)
+        self.indexing = ChatIndexingService(db)
+        self.notes = ChatNotesService(db)
 
     def load_chat(self, state: IngestionState) -> dict:
         chat_id = UUID(state["chat_id"])
@@ -146,6 +150,17 @@ class IngestionNodes:
             "status": "artifacts_persisted",
         }
 
+    def index_chat(self, state: IngestionState) -> dict:
+        result = self.indexing.index_chat(UUID(state["chat_id"]))
+
+        return {
+            "indexed_chunk_count": result["chunk_count"],
+            "indexed_embedding_provider": result["embedding_provider"],
+            "indexed_embedding_model": result["embedding_model"],
+            "indexed_embedding_dimensions": result["embedding_dimensions"],
+            "status": "indexed",
+        }
+
     def classify_complexity_seed(self, state: IngestionState) -> dict:
         title = (state.get("title") or "").lower()
         domain = (state.get("source_domain") or "").lower()
@@ -190,6 +205,36 @@ class IngestionNodes:
             "status": "complexity_seeded",
         }
 
+    def generate_study_notes(self, state: IngestionState) -> dict:
+        if not state.get("should_generate_notes", False):
+            return {
+                "study_notes_generated": False,
+                "status": "study_notes_skipped",
+            }
+
+        note = self.notes.generate_study_notes(UUID(state["chat_id"]))
+
+        return {
+            "study_note_id": str(note.id),
+            "study_notes_generated": True,
+            "status": "study_notes_generated",
+        }
+
+    def generate_visual_notes(self, state: IngestionState) -> dict:
+        if not state.get("should_generate_visual_notes", False):
+            return {
+                "visual_notes_generated": False,
+                "status": "visual_notes_skipped",
+            }
+
+        note = self.notes.generate_visual_notes(UUID(state["chat_id"]))
+
+        return {
+            "visual_note_id": str(note.id),
+            "visual_notes_generated": True,
+            "status": "visual_notes_generated",
+        }
+
     def build_result_payload(self, state: IngestionState) -> dict:
         payload = {
             "chat_id": state["chat_id"],
@@ -206,13 +251,20 @@ class IngestionNodes:
             "capture_strategy": state.get("capture_strategy"),
             "planned_artifacts": state.get("planned_artifacts", []),
             "persisted_artifacts": state.get("persisted_artifacts", []),
+            "indexed_chunk_count": state.get("indexed_chunk_count"),
+            "indexed_embedding_provider": state.get("indexed_embedding_provider"),
+            "indexed_embedding_model": state.get("indexed_embedding_model"),
+            "indexed_embedding_dimensions": state.get("indexed_embedding_dimensions"),
             "complexity_score": state.get("complexity_score"),
             "should_generate_notes": state.get("should_generate_notes", False),
             "should_generate_visual_notes": state.get("should_generate_visual_notes", False),
+            "study_note_id": state.get("study_note_id"),
+            "study_notes_generated": state.get("study_notes_generated", False),
+            "visual_note_id": state.get("visual_note_id"),
+            "visual_notes_generated": state.get("visual_notes_generated", False),
         }
 
         return {
             "result_payload": payload,
-            "status": "executed",
+            "status": "ready",
         }
-

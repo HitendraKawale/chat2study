@@ -44,9 +44,17 @@ class IngestionWorkflowResponse(BaseModel):
     capture_strategy: str | None = None
     planned_artifacts: list[str] = Field(default_factory=list)
     persisted_artifacts: list[PersistedArtifactResponse] = Field(default_factory=list)
+    indexed_chunk_count: int | None = None
+    indexed_embedding_provider: str | None = None
+    indexed_embedding_model: str | None = None
+    indexed_embedding_dimensions: int | None = None
     complexity_score: int | None = None
     should_generate_notes: bool = False
     should_generate_visual_notes: bool = False
+    study_note_id: str | None = None
+    study_notes_generated: bool = False
+    visual_note_id: str | None = None
+    visual_notes_generated: bool = False
 
 
 class IngestionRunResponse(BaseModel):

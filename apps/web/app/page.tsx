@@ -1,87 +1,84 @@
-const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import Link from "next/link";
 
-const pillars = [
-  {
-    title: "Ingest",
-    description:
-      "Capture authorized chat pages, preserve HTML, screenshots, and PDFs.",
-  },
-  {
-    title: "Retrieve",
-    description:
-      "Index the conversation into a searchable RAG layer with chunk-level retrieval.",
-  },
-  {
-    title: "Study",
-    description:
-      "Generate text notes and visual notes for dense technical discussions.",
-  },
-];
+import { IngestForm } from "@/components/ingest-form";
+import { getChats } from "@/lib/api";
 
-export default function Home() {
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+export default async function HomePage() {
+  const chats = await getChats();
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
-      <section className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-16">
-        <div className="mb-14 flex items-center justify-between gap-6">
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="mb-3 inline-flex rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
-              Production foundation · Phase 1
+            <p className="mb-3 inline-flex rounded-full border border-slate-800 px-3 py-1 text-xs text-slate-300">
+              Phase 7 · Frontend integration
             </p>
-            <h1 className="text-5xl font-semibold tracking-tight">
-              Chat2Study
-            </h1>
-            <p className="mt-4 max-w-3xl text-lg text-slate-300">
-              A production-focused app that turns long AI chats into preserved
-              artifacts, searchable knowledge, smart notes, and visual study
-              maps.
+            <h1 className="text-4xl font-semibold tracking-tight">Chat2Study</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
+              Ingest long AI chats, preserve artifacts, index them for retrieval,
+              and turn them into study notes and visual maps.
             </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 text-sm text-slate-300 shadow-2xl">
-            <p className="font-medium text-slate-100">Current API target</p>
-            <p className="mt-2 break-all">{apiBaseUrl}</p>
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {pillars.map((pillar) => (
-            <div
-              key={pillar.title}
-              className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg"
-            >
-              <h2 className="text-xl font-semibold">{pillar.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                {pillar.description}
-              </p>
+        <div className="grid gap-6 xl:grid-cols-[420px,1fr]">
+          <IngestForm />
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Recent chats</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Latest captured conversations from your local backend.
+                </p>
+              </div>
+              <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
+                {chats.length} total
+              </span>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="text-xl font-semibold">Planned stack</h3>
-            <ul className="mt-4 space-y-2 text-sm text-slate-300">
-              <li>Next.js App Router</li>
-              <li>FastAPI</li>
-              <li>LangGraph + LangChain</li>
-              <li>PostgreSQL + pgvector</li>
-              <li>Redis + workers</li>
-              <li>MinIO object storage</li>
-              <li>Ollama / OpenAI / Claude / Gemini providers</li>
-            </ul>
-          </div>
+            {chats.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 p-8 text-sm text-slate-400">
+                No chats yet. Ingest one using the form on the left.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {chats.map((chat) => (
+                  <Link
+                    key={chat.id}
+                    href={`/chats/${chat.id}`}
+                    className="block rounded-2xl border border-slate-800 bg-slate-950/60 p-5 transition hover:border-slate-600"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h3 className="text-lg font-medium text-slate-100">
+                        {chat.title}
+                      </h3>
+                      <span className="rounded-full border border-slate-700 px-2.5 py-1 text-xs text-slate-300">
+                        {chat.status}
+                      </span>
+                    </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="text-xl font-semibold">Next milestones</h3>
-            <ul className="mt-4 space-y-2 text-sm text-slate-300">
-              <li>Database models and migrations</li>
-              <li>LangGraph ingestion workflow</li>
-              <li>Artifact persistence</li>
-              <li>RAG indexing and querying</li>
-              <li>Visual notes renderer</li>
-            </ul>
-          </div>
+                    <p className="mt-2 break-all text-sm text-slate-400">
+                      {chat.url}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">
+                      <span>Type: {chat.source_type}</span>
+                      <span>Created: {formatDate(chat.created_at)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </section>
     </main>

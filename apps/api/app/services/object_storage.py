@@ -37,3 +37,13 @@ class ObjectStorageService:
         buffer = io.BytesIO()
         self.client.download_fileobj(self.bucket, object_key, buffer)
         return buffer.getvalue().decode(encoding)
+
+    def generate_presigned_get_url(self, object_key: str, expires_in: int = 3600) -> str:
+        return self.client.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": self.bucket,
+                "Key": object_key,
+            },
+            ExpiresIn=expires_in,
+        )

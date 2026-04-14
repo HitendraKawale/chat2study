@@ -46,9 +46,17 @@ def run_ingestion(chat_id: UUID, db: Session = Depends(get_db)) -> IngestionRunR
                 PersistedArtifactResponse(**artifact)
                 for artifact in state.get("persisted_artifacts", [])
             ],
+            indexed_chunk_count=state.get("indexed_chunk_count"),
+            indexed_embedding_provider=state.get("indexed_embedding_provider"),
+            indexed_embedding_model=state.get("indexed_embedding_model"),
+            indexed_embedding_dimensions=state.get("indexed_embedding_dimensions"),
             complexity_score=state.get("complexity_score"),
             should_generate_notes=state.get("should_generate_notes", False),
             should_generate_visual_notes=state.get("should_generate_visual_notes", False),
+            study_note_id=state.get("study_note_id"),
+            study_notes_generated=state.get("study_notes_generated", False),
+            visual_note_id=state.get("visual_note_id"),
+            visual_notes_generated=state.get("visual_notes_generated", False),
         ),
     )
 
