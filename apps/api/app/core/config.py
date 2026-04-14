@@ -21,6 +21,10 @@ class Settings(BaseSettings):
 
     s3_endpoint: str = Field(default="http://localhost:9000", alias="S3_ENDPOINT")
     s3_bucket: str = Field(default="chat2study", alias="S3_BUCKET")
+    s3_access_key: str = Field(default="minioadmin", alias="S3_ACCESS_KEY")
+    s3_secret_key: str = Field(default="minioadmin", alias="S3_SECRET_KEY")
+    aws_default_region: str = Field(default="us-east-1", alias="AWS_DEFAULT_REGION")
+    s3_force_path_style: bool = Field(default=True, alias="S3_FORCE_PATH_STYLE")
 
     default_chat_provider: str = Field(default="ollama", alias="DEFAULT_CHAT_PROVIDER")
     default_embedding_provider: str = Field(
@@ -31,16 +35,23 @@ class Settings(BaseSettings):
 
     openai_chat_model: str | None = Field(default=None, alias="OPENAI_CHAT_MODEL")
     openai_embedding_model: str | None = Field(default=None, alias="OPENAI_EMBEDDING_MODEL")
-
     anthropic_chat_model: str | None = Field(default=None, alias="ANTHROPIC_CHAT_MODEL")
-
     google_chat_model: str | None = Field(default=None, alias="GOOGLE_CHAT_MODEL")
     google_embedding_model: str | None = Field(default=None, alias="GOOGLE_EMBEDDING_MODEL")
-
     ollama_chat_model: str = Field(default="llama3.2:3b", alias="OLLAMA_CHAT_MODEL")
     ollama_embedding_model: str = Field(
         default="nomic-embed-text",
         alias="OLLAMA_EMBEDDING_MODEL",
+    )
+
+    playwright_headless: bool = Field(default=True, alias="PLAYWRIGHT_HEADLESS")
+    playwright_auth_state_path: Path = Field(
+        default=Path("playwright/.auth/default.json"),
+        alias="PLAYWRIGHT_AUTH_STATE_PATH",
+    )
+    local_artifact_staging_dir: Path = Field(
+        default=Path(".cache/artifacts"),
+        alias="LOCAL_ARTIFACT_STAGING_DIR",
     )
 
     cors_origins: list[str] = [
@@ -56,4 +67,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+settings.local_artifact_staging_dir.mkdir(parents=True, exist_ok=True)
+settings.playwright_auth_state_path.parent.mkdir(parents=True, exist_ok=True)
 
