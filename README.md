@@ -898,4 +898,8 @@ A production deployment guide will be added later.
 
 ## License
 
-License will be added before first public release tag.
+Released under the MIT License.
+
+See [LICENSE](./LICENSE) for the full text.
+
+
