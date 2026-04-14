@@ -1,0 +1,19 @@
+from sqlalchemy import MetaData
+from sqlalchemy.orm import DeclarativeBase
+
+NAMING_CONVENTION = {
+    "ix": "ix_%(schema)s_%(table_name)s_%(column_0_N_name)s",
+    "uq": "uq_%(schema)s_%(table_name)s_%(column_0_N_name)s",
+    "ck": "ck_%(schema)s_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(schema)s_%(table_name)s_%(column_0_N_name)s_%(referred_table_name)s",
+    "pk": "pk_%(schema)s_%(table_name)s",
+}
+
+metadata_obj = MetaData(
+    schema="chat2study",
+    naming_convention=NAMING_CONVENTION,
+)
+
+
+class Base(DeclarativeBase):
+    metadata = metadata_obj
