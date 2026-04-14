@@ -1,6 +1,7 @@
 from collections.abc import Generator
 
-from sqlalchemy import create_engine
+from pgvector.psycopg import register_vector
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
@@ -9,6 +10,12 @@ engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
 )
+
+
+@event.listens_for(engine, "connect")
+def register_pgvector_types(dbapi_connection, connection_record) -> None:
+    register_vector(dbapi_connection)
+
 
 SessionLocal = sessionmaker(
     bind=engine,
@@ -25,3 +32,4 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+

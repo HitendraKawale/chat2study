@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
 import boto3
@@ -31,3 +32,8 @@ class ObjectStorageService:
                 ExtraArgs={"ContentType": content_type},
             )
         return object_key
+
+    def read_text(self, object_key: str, encoding: str = "utf-8") -> str:
+        buffer = io.BytesIO()
+        self.client.download_fileobj(self.bucket, object_key, buffer)
+        return buffer.getvalue().decode(encoding)

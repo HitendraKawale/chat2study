@@ -65,9 +65,13 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    embedding_dimensions: int = Field(default=768, alias="EMBEDDING_DIMENSIONS")
+    chunk_size: int = Field(default=1200, alias="CHUNK_SIZE")
+    chunk_overlap: int = Field(default=200, alias="CHUNK_OVERLAP")
+    retrieval_top_k: int = Field(default=5, alias="RETRIEVAL_TOP_K")
+
 
 settings = Settings()
 
 settings.local_artifact_staging_dir.mkdir(parents=True, exist_ok=True)
 settings.playwright_auth_state_path.parent.mkdir(parents=True, exist_ok=True)
-
