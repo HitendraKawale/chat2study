@@ -1,10 +1,14 @@
 {
   "name": "chat2study",
   "private": true,
+  "packageManager": "pnpm@10.0.0",
   "scripts": {
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:logs": "docker compose logs -f",
-    "infra:ps": "docker compose ps"
+    "infra:ps": "docker compose ps",
+    "web:dev": "pnpm --filter @chat2study/web dev",
+    "web:build": "pnpm --filter @chat2study/web build",
+    "web:start": "pnpm --filter @chat2study/web start"
   }
 }
