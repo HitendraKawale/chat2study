@@ -20,13 +20,17 @@ class IngestionWorkflow:
         builder.add_node("load_chat", nodes.load_chat)
         builder.add_node("select_providers", nodes.select_providers)
         builder.add_node("plan_capture", nodes.plan_capture)
+        builder.add_node("execute_capture", nodes.execute_capture)
+        builder.add_node("persist_artifacts", nodes.persist_artifacts)
         builder.add_node("classify_complexity_seed", nodes.classify_complexity_seed)
         builder.add_node("build_result_payload", nodes.build_result_payload)
 
         builder.add_edge(START, "load_chat")
         builder.add_edge("load_chat", "select_providers")
         builder.add_edge("select_providers", "plan_capture")
-        builder.add_edge("plan_capture", "classify_complexity_seed")
+        builder.add_edge("plan_capture", "execute_capture")
+        builder.add_edge("execute_capture", "persist_artifacts")
+        builder.add_edge("persist_artifacts", "classify_complexity_seed")
         builder.add_edge("classify_complexity_seed", "build_result_payload")
         builder.add_edge("build_result_payload", END)
 
@@ -39,3 +43,4 @@ class IngestionWorkflow:
                 "job_id": job_id,
             }
         )
+

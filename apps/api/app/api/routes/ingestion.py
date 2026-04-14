@@ -4,7 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.job import IngestionRunResponse, IngestionWorkflowResponse, JobResponse
+from app.schemas.job import (
+    IngestionRunResponse,
+    IngestionWorkflowResponse,
+    JobResponse,
+    PersistedArtifactResponse,
+)
 from app.services.job_runner import IngestionJobRunner
 
 router = APIRouter(prefix="/chats", tags=["ingestion"])
@@ -28,6 +33,7 @@ def run_ingestion(chat_id: UUID, db: Session = Depends(get_db)) -> IngestionRunR
             job_id=state["job_id"],
             title=state.get("title"),
             source_url=state.get("source_url"),
+            final_url=state.get("final_url"),
             source_type=state.get("source_type"),
             source_domain=state.get("source_domain"),
             selected_chat_provider=state.get("selected_chat_provider"),
@@ -36,11 +42,13 @@ def run_ingestion(chat_id: UUID, db: Session = Depends(get_db)) -> IngestionRunR
             selected_embedding_model=state.get("selected_embedding_model"),
             capture_strategy=state.get("capture_strategy"),
             planned_artifacts=state.get("planned_artifacts", []),
+            persisted_artifacts=[
+                PersistedArtifactResponse(**artifact)
+                for artifact in state.get("persisted_artifacts", [])
+            ],
             complexity_score=state.get("complexity_score"),
             should_generate_notes=state.get("should_generate_notes", False),
-            should_generate_visual_notes=state.get(
-                "should_generate_visual_notes",
-                False,
-            ),
+            should_generate_visual_notes=state.get("should_generate_visual_notes", False),
         ),
     )
+

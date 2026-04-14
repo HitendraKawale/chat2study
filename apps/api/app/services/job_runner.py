@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -13,7 +14,7 @@ class IngestionJobRunner:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def run(self, chat_id: UUID) -> tuple[Job, dict]:
+    def run(self, chat_id: UUID) -> tuple[Job, dict[str, Any]]:
         chat = self.db.get(Chat, chat_id)
         if chat is None:
             raise ValueError(f"Chat not found: {chat_id}")
@@ -38,7 +39,7 @@ class IngestionJobRunner:
             workflow = IngestionWorkflow(self.db)
             state = workflow.invoke(str(chat.id), str(job.id))
 
-            chat.status = "planned"
+            chat.status = "captured"
             chat.complexity_score = state.get("complexity_score")
             job.status = "completed"
             job.finished_at = datetime.now(timezone.utc)
@@ -71,3 +72,4 @@ class IngestionJobRunner:
                 self.db.refresh(job)
 
             raise
+

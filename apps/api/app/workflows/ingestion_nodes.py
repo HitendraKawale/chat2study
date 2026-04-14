@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -7,6 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import Chat, Source
+from app.services.artifact_manager import ArtifactManager
+from app.services.capture.browser_capture import BrowserCaptureService
 from app.services.providers import ProviderFactory
 from app.workflows.ingestion_state import IngestionState
 
@@ -14,6 +17,8 @@ from app.workflows.ingestion_state import IngestionState
 class IngestionNodes:
     def __init__(self, db: Session) -> None:
         self.db = db
+        self.capture = BrowserCaptureService()
+        self.artifacts = ArtifactManager(db)
 
     def load_chat(self, state: IngestionState) -> dict:
         chat_id = UUID(state["chat_id"])
@@ -88,9 +93,67 @@ class IngestionNodes:
             "status": "capture_planned",
         }
 
+    def execute_capture(self, state: IngestionState) -> dict:
+        artifacts = self.capture.capture_chat(
+            chat_id=state["chat_id"],
+            source_url=state["source_url"],
+            capture_strategy=state["capture_strategy"],
+        )
+
+        return {
+            "title": artifacts.title,
+            "final_url": artifacts.final_url,
+            "staged_html_path": str(artifacts.html_path),
+            "staged_text_path": str(artifacts.text_path),
+            "staged_screenshot_path": str(artifacts.screenshot_path),
+            "staged_pdf_path": str(artifacts.pdf_path),
+            "status": "captured",
+        }
+
+    def persist_artifacts(self, state: IngestionState) -> dict:
+        chat_id = UUID(state["chat_id"])
+
+        saved = []
+
+        mapping = [
+            ("raw_html", Path(state["staged_html_path"]), "text/html"),
+            ("visible_text", Path(state["staged_text_path"]), "text/plain"),
+            ("screenshot_png", Path(state["staged_screenshot_path"]), "image/png"),
+            ("snapshot_pdf", Path(state["staged_pdf_path"]), "application/pdf"),
+        ]
+
+        for artifact_type, local_path, content_type in mapping:
+            artifact = self.artifacts.upload_and_record(
+                chat_id=chat_id,
+                artifact_type=artifact_type,
+                local_path=local_path,
+                content_type=content_type,
+            )
+            saved.append(
+                {
+                    "id": str(artifact.id),
+                    "artifact_type": artifact.artifact_type,
+                    "storage_key": artifact.storage_key,
+                    "mime_type": artifact.mime_type,
+                    "size_bytes": artifact.size_bytes,
+                }
+            )
+
+        self.db.commit()
+
+        return {
+            "persisted_artifacts": saved,
+            "status": "artifacts_persisted",
+        }
+
     def classify_complexity_seed(self, state: IngestionState) -> dict:
         title = (state.get("title") or "").lower()
         domain = (state.get("source_domain") or "").lower()
+
+        text_path = state.get("staged_text_path")
+        text = ""
+        if text_path:
+            text = Path(text_path).read_text(encoding="utf-8", errors="ignore").lower()
 
         keywords = {
             "agent",
@@ -112,8 +175,11 @@ class IngestionNodes:
             score += 2
 
         for keyword in keywords:
-            if keyword in title:
+            if keyword in title or keyword in text:
                 score += 1
+
+        if len(text.split()) > 2500:
+            score += 2
 
         score = min(score, 10)
 
@@ -130,6 +196,7 @@ class IngestionNodes:
             "job_id": state["job_id"],
             "title": state.get("title"),
             "source_url": state.get("source_url"),
+            "final_url": state.get("final_url"),
             "source_type": state.get("source_type"),
             "source_domain": state.get("source_domain"),
             "selected_chat_provider": state.get("selected_chat_provider"),
@@ -138,6 +205,7 @@ class IngestionNodes:
             "selected_embedding_model": state.get("selected_embedding_model"),
             "capture_strategy": state.get("capture_strategy"),
             "planned_artifacts": state.get("planned_artifacts", []),
+            "persisted_artifacts": state.get("persisted_artifacts", []),
             "complexity_score": state.get("complexity_score"),
             "should_generate_notes": state.get("should_generate_notes", False),
             "should_generate_visual_notes": state.get("should_generate_visual_notes", False),
@@ -145,5 +213,6 @@ class IngestionNodes:
 
         return {
             "result_payload": payload,
-            "status": "planned",
+            "status": "executed",
         }
+

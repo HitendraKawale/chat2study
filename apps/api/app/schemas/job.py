@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class JobResponse(BaseModel):
@@ -21,11 +21,20 @@ class JobResponse(BaseModel):
     updated_at: datetime
 
 
+class PersistedArtifactResponse(BaseModel):
+    id: str
+    artifact_type: str
+    storage_key: str
+    mime_type: str | None = None
+    size_bytes: int | None = None
+
+
 class IngestionWorkflowResponse(BaseModel):
     chat_id: str
     job_id: str
     title: str | None = None
     source_url: str | None = None
+    final_url: str | None = None
     source_type: str | None = None
     source_domain: str | None = None
     selected_chat_provider: str | None = None
@@ -33,7 +42,8 @@ class IngestionWorkflowResponse(BaseModel):
     selected_chat_model: str | None = None
     selected_embedding_model: str | None = None
     capture_strategy: str | None = None
-    planned_artifacts: list[str] = []
+    planned_artifacts: list[str] = Field(default_factory=list)
+    persisted_artifacts: list[PersistedArtifactResponse] = Field(default_factory=list)
     complexity_score: int | None = None
     should_generate_notes: bool = False
     should_generate_visual_notes: bool = False
@@ -42,3 +52,4 @@ class IngestionWorkflowResponse(BaseModel):
 class IngestionRunResponse(BaseModel):
     job: JobResponse
     workflow: IngestionWorkflowResponse
+

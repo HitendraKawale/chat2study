@@ -7,6 +7,7 @@ class IngestionState(TypedDict):
 
     title: NotRequired[str]
     source_url: NotRequired[str]
+    final_url: NotRequired[str]
     source_type: NotRequired[str]
     source_domain: NotRequired[str | None]
 
@@ -18,6 +19,13 @@ class IngestionState(TypedDict):
     planned_artifacts: NotRequired[list[str]]
     capture_strategy: NotRequired[str]
 
+    staged_html_path: NotRequired[str]
+    staged_text_path: NotRequired[str]
+    staged_screenshot_path: NotRequired[str]
+    staged_pdf_path: NotRequired[str]
+
+    persisted_artifacts: NotRequired[list[dict[str, Any]]]
+
     complexity_score: NotRequired[int]
     should_generate_notes: NotRequired[bool]
     should_generate_visual_notes: NotRequired[bool]
@@ -25,3 +33,4 @@ class IngestionState(TypedDict):
     status: NotRequired[str]
     result_payload: NotRequired[dict[str, Any]]
     error: NotRequired[str]
+
