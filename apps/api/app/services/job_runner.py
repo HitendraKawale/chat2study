@@ -36,27 +36,38 @@ class IngestionJobRunner:
             self.db.commit()
 
             workflow = IngestionWorkflow(self.db)
-            result = workflow.invoke(str(chat.id), str(job.id))
+            state = workflow.invoke(str(chat.id), str(job.id))
 
             chat.status = "planned"
-            chat.complexity_score = result.get("complexity_score")
+            chat.complexity_score = state.get("complexity_score")
             job.status = "completed"
             job.finished_at = datetime.now(timezone.utc)
-            job.result_payload = result.get("result_payload")
+            job.result_payload = state
             job.error_message = None
 
             self.db.commit()
             self.db.refresh(chat)
             self.db.refresh(job)
 
-            return job, result
+            return job, state
 
         except Exception as exc:
-            chat.status = "failed"
-            job.status = "failed"
-            job.finished_at = datetime.now(timezone.utc)
-            job.error_message = str(exc)
+            self.db.rollback()
+
+            chat = self.db.get(Chat, chat_id)
+            job = self.db.get(Job, job.id)
+
+            if chat is not None:
+                chat.status = "failed"
+
+            if job is not None:
+                job.status = "failed"
+                job.finished_at = datetime.now(timezone.utc)
+                job.error_message = str(exc)
 
             self.db.commit()
-            self.db.refresh(job)
+
+            if job is not None:
+                self.db.refresh(job)
+
             raise
