@@ -42,3 +42,18 @@ playwright/.auth/
 
 # misc
 .turbo/
+
+# local app cache / generated artifacts
+apps/api/.cache/
+.metrics_tmp/
+
+# local metrics outputs
+ingest_response.json
+index_response.json
+search_response.json
+ask_response.json
+ingest_times.txt
+index_times.txt
+search_times.txt
+ask_times.txt
+chunk_counts.txt
