@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 from app.core.config import settings
@@ -37,9 +38,23 @@ class BrowserCaptureService:
 
             context = browser.new_context(**context_kwargs)
             page = context.new_page()
+
+            # 1. Get to the page and wait only for a stable baseline.
             page.goto(source_url, wait_until="domcontentloaded", timeout=120000)
-            page.wait_for_load_state("networkidle", timeout=120000)
-            page.wait_for_timeout(1500)
+
+            try:
+                page.wait_for_load_state("load", timeout=15000)
+            except PlaywrightTimeoutError:
+                pass
+
+            # 2. Try networkidle briefly, but do NOT fail the whole ingest if it never happens.
+            try:
+                page.wait_for_load_state("networkidle", timeout=5000)
+            except PlaywrightTimeoutError:
+                pass
+
+            # 3. Give the UI a short settle window.
+            page.wait_for_timeout(2000)
 
             title = page.title() or "Untitled Chat"
             final_url = page.url
