@@ -22,7 +22,10 @@ def run_ingestion(chat_id: UUID, db: Session = Depends(get_db)) -> IngestionRunR
     try:
         job, state = runner.run(chat_id)
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        message = str(exc)
+        if "Chat not found" in message:
+            raise HTTPException(status_code=404, detail=message) from exc
+        raise HTTPException(status_code=400, detail=message) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
