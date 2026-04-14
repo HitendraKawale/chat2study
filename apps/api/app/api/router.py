@@ -6,6 +6,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.indexing import router as indexing_router
 from app.api.routes.ingestion import router as ingestion_router
 from app.api.routes.jobs import router as jobs_router
+from app.api.routes.notes import router as notes_router
 from app.api.routes.providers import router as providers_router
 from app.api.routes.retrieval import router as retrieval_router
 
@@ -18,4 +19,5 @@ api_router.include_router(ingestion_router, prefix="/api/v1")
 api_router.include_router(artifacts_router, prefix="/api/v1")
 api_router.include_router(indexing_router, prefix="/api/v1")
 api_router.include_router(retrieval_router, prefix="/api/v1")
+api_router.include_router(notes_router, prefix="/api/v1")
 

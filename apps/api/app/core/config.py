@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     chunk_overlap: int = Field(default=200, alias="CHUNK_OVERLAP")
     retrieval_top_k: int = Field(default=5, alias="RETRIEVAL_TOP_K")
 
+    notes_context_char_limit: int = Field(default=16000, alias="NOTES_CONTEXT_CHAR_LIMIT")
+
 
 settings = Settings()
 
