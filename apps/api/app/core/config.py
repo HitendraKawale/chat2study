@@ -27,8 +27,20 @@ class Settings(BaseSettings):
         default="ollama",
         alias="DEFAULT_EMBEDDING_PROVIDER",
     )
-    ollama_base_url: str = Field(
-        default="http://localhost:11434", alias="OLLAMA_BASE_URL"
+    ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
+
+    openai_chat_model: str | None = Field(default=None, alias="OPENAI_CHAT_MODEL")
+    openai_embedding_model: str | None = Field(default=None, alias="OPENAI_EMBEDDING_MODEL")
+
+    anthropic_chat_model: str | None = Field(default=None, alias="ANTHROPIC_CHAT_MODEL")
+
+    google_chat_model: str | None = Field(default=None, alias="GOOGLE_CHAT_MODEL")
+    google_embedding_model: str | None = Field(default=None, alias="GOOGLE_EMBEDDING_MODEL")
+
+    ollama_chat_model: str = Field(default="llama3.2:3b", alias="OLLAMA_CHAT_MODEL")
+    ollama_embedding_model: str = Field(
+        default="nomic-embed-text",
+        alias="OLLAMA_EMBEDDING_MODEL",
     )
 
     cors_origins: list[str] = [
@@ -44,3 +56,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

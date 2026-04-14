@@ -11,6 +11,12 @@ dependencies = [
   "alembic>=1.17.0",
   "psycopg[binary]>=3.2.0",
   "pgvector>=0.4.0",
+  "langchain>=1.0.0",
+  "langgraph>=0.2.0",
+  "langchain-openai>=0.3.0",
+  "langchain-anthropic>=0.3.0",
+  "langchain-google-genai>=2.0.0",
+  "langchain-ollama>=0.3.0",
 ]
 
 [dependency-groups]
