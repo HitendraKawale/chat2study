@@ -1,19 +1,20 @@
 from __future__ import annotations
 
+import sys
 from logging.config import fileConfig
 from pathlib import Path
-import sys
+
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
 
 APP_DIR = Path(__file__).resolve().parents[1]
 if str(APP_DIR) not in sys.path:
     sys.path.append(str(APP_DIR))
 
+import app.db.models  # noqa: F401, E402
 from app.core.config import settings  # noqa: E402
 from app.db.base import Base  # noqa: E402
-import app.db.models  # noqa: F401, E402
 
 config = context.config
 

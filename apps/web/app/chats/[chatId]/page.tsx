@@ -26,17 +26,19 @@ function formatBytes(value: number | null) {
 export default async function ChatDetailPage({
   params,
 }: {
-  params: { chatId: string };
+  params: Promise<{ chatId: string }>;
 }) {
-  const chat = await getChatById(params.chatId);
+  const { chatId } = await params;
+
+  const chat = await getChatById(chatId);
 
   if (!chat) {
     notFound();
   }
 
   const [artifacts, notes] = await Promise.all([
-    getArtifacts(params.chatId),
-    getNotes(params.chatId),
+    getArtifacts(chatId),
+    getNotes(chatId),
   ]);
 
   return (

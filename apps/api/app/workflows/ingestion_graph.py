@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from sqlalchemy.orm import Session
-
 from langgraph.graph import END, START, StateGraph
+from sqlalchemy.orm import Session
 
 from app.workflows.ingestion_nodes import IngestionNodes
 from app.workflows.ingestion_state import IngestionState

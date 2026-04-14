@@ -1,16 +1,21 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from pgvector.sqlalchemy import VECTOR
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from pgvector.sqlalchemy import VECTOR
-from sqlalchemy.dialects.postgresql import JSONB
-
 from app.core.config import settings
-
 from app.db.base import Base
 
 

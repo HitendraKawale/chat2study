@@ -85,7 +85,8 @@ class ProviderFactory:
             )
         if selected == "anthropic":
             raise ProviderConfigError(
-                "Anthropic chat models are supported, but embeddings are not configured in this project."
+                "Anthropic chat models are supported, "
+                "but embeddings are not configured in this project."
             )
 
         raise ProviderConfigError(f"Unsupported embedding provider: {selected}")

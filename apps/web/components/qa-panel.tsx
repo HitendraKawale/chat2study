@@ -24,6 +24,11 @@ export function QAPanel({ chatId }: Props) {
 
     try {
       const result = await searchChat(chatId, searchQuery, 5);
+
+      if (!result) {
+        throw new Error("Search returned no data");
+      }
+
       setSearchResult(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed");
@@ -38,6 +43,11 @@ export function QAPanel({ chatId }: Props) {
 
     try {
       const result = await askChat(chatId, question, 5);
+
+      if (!result) {
+        throw new Error("Question answering returned no data");
+      }
+
       setAnswerResult(result);
       setSearchResult({
         chat_id: result.chat_id,
