@@ -1,0 +1,10 @@
+{
+  "name": "chat2study",
+  "private": true,
+  "scripts": {
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f",
+    "infra:ps": "docker compose ps"
+  }
+}

@@ -1,11 +1,44 @@
+
+### `.gitignore`
+
+```gitignore id="1p0a03"
+# macOS
+.DS_Store
+
+# editor
+.vscode/
+.idea/
+
+# node
+node_modules/
+.pnpm-store/
+.next/
+dist/
+coverage/
+
+# python
 __pycache__/
 *.py[cod]
-*.so
 .venv/
-.env
 .pytest_cache/
+.mypy_cache/
 .ruff_cache/
-.DS_Store
-playwright-state/
-data/chats/
+
+# environment
+.env
+.env.local
+.env.*.local
+
+# docker / local infra
+postgres-data/
+redis-data/
+minio-data/
+
+# logs
 *.log
+
+# playwright auth state
+playwright/.auth/
+
+# misc
+.turbo/
