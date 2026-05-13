@@ -88,7 +88,11 @@ export async function loginUser(payload: {
 }
 
 export async function getMe() {
-  return await apiFetch<UserResponse>("/api/v1/auth/me", { allowNotFound: true });
+  try {
+    return await apiFetch<UserResponse>("/api/v1/auth/me", { allowNotFound: true });
+  } catch {
+    return null;
+  }
 }
 
 // Chats
