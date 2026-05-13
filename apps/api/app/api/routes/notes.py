@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -79,6 +80,23 @@ def generate_study_notes(chat_id: UUID, db: Session = Depends(get_db)) -> StudyN
         model_name=note.model_name,
         created_at=note.created_at,
         updated_at=note.updated_at,
+    )
+
+
+@router.get("/{chat_id}/notes/download")
+def download_study_notes(chat_id: UUID, db: Session = Depends(get_db)) -> Response:
+    service = ChatNotesService(db)
+    bundle = service.get_notes_bundle(chat_id)
+    study = bundle["study_notes"]
+
+    if study is None or not study.content_md:
+        raise HTTPException(status_code=404, detail="No study notes found for this chat")
+
+    filename = f"study-notes-{chat_id}.md"
+    return Response(
+        content=study.content_md,
+        media_type="text/markdown",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

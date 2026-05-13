@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -40,6 +41,28 @@ def create_chat(payload: ChatCreateRequest, db: Session = Depends(get_db)) -> Ch
         status=chat.status,
         url=source.source_url,
         source_type=source.source_type,
+        created_at=chat.created_at,
+    )
+
+
+@router.get("/{chat_id}", response_model=ChatResponse)
+def get_chat(chat_id: UUID, db: Session = Depends(get_db)) -> ChatResponse:
+    stmt = (
+        select(Chat, Source)
+        .join(Source, Chat.source_id == Source.id, isouter=True)
+        .where(Chat.id == chat_id)
+    )
+    row = db.execute(stmt).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    chat, source = row
+    return ChatResponse(
+        id=chat.id,
+        source_id=chat.source_id,
+        title=chat.title,
+        status=chat.status,
+        url=source.source_url if source else "",
+        source_type=source.source_type if source else "unknown",
         created_at=chat.created_at,
     )
 

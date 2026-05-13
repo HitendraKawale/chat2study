@@ -1,3 +1,15 @@
+export type TokenResponse = {
+  access_token: string;
+  token_type: string;
+};
+
+export type UserResponse = {
+  id: string;
+  email: string;
+  name: string | null;
+  created_at: string;
+};
+
 export type ChatSummary = {
   id: string;
   source_id: string | null;

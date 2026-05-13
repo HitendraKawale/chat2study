@@ -72,6 +72,10 @@ class Settings(BaseSettings):
 
     notes_context_char_limit: int = Field(default=16000, alias="NOTES_CONTEXT_CHAR_LIMIT")
 
+    secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_expire_days: int = Field(default=7, alias="JWT_EXPIRE_DAYS")
+
 
 settings = Settings()
 

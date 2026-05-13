@@ -13,63 +13,62 @@ export function GenerateNotesActions({ chatId }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState<"study" | "visual" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  async function handleStudyNotes() {
-    setBusy("study");
+  async function handle(type: "study" | "visual") {
+    setBusy(type);
     setError(null);
+    setSuccess(null);
 
     try {
-      await generateStudyNotes(chatId);
+      if (type === "study") {
+        await generateStudyNotes(chatId);
+        setSuccess("Study notes generated.");
+      } else {
+        await generateVisualNotes(chatId);
+        setSuccess("Visual map generated.");
+      }
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate study notes");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function handleVisualNotes() {
-    setBusy("visual");
-    setError(null);
-
-    try {
-      await generateVisualNotes(chatId);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate visual notes");
+      setError(err instanceof Error ? err.message : "Generation failed");
     } finally {
       setBusy(null);
     }
   }
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-      <div className="flex flex-wrap gap-3">
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={handleStudyNotes}
+          onClick={() => handle("study")}
           disabled={busy !== null}
-          className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-100 hover:border-slate-500 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 px-3.5 py-2 text-sm font-medium text-slate-100 transition hover:border-slate-500 disabled:opacity-60"
         >
-          {busy === "study" ? "Generating study notes..." : "Generate study notes"}
+          {busy === "study" && (
+            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-600 border-t-slate-200" />
+          )}
+          {busy === "study" ? "Generating…" : "Generate study notes"}
         </button>
 
         <button
           type="button"
-          onClick={handleVisualNotes}
+          onClick={() => handle("visual")}
           disabled={busy !== null}
-          className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-100 hover:border-slate-500 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 px-3.5 py-2 text-sm font-medium text-slate-100 transition hover:border-slate-500 disabled:opacity-60"
         >
-          {busy === "visual" ? "Generating visual notes..." : "Generate visual notes"}
+          {busy === "visual" && (
+            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-600 border-t-slate-200" />
+          )}
+          {busy === "visual" ? "Generating…" : "Generate visual map"}
         </button>
       </div>
 
-      {error ? (
-        <p className="mt-3 text-sm text-red-300">{error}</p>
-      ) : (
-        <p className="mt-3 text-sm text-slate-400">
-          Use these to generate notes manually when the auto-threshold does not trigger.
-        </p>
+      {error && (
+        <p className="text-xs text-red-400">{error}</p>
+      )}
+      {success && !error && (
+        <p className="text-xs text-emerald-400">{success}</p>
       )}
     </div>
   );
