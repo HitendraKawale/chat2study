@@ -1,7 +1,3 @@
-
-### `.gitignore`
-
-```gitignore id="1p0a03"
 # macOS
 .DS_Store
 
@@ -15,6 +11,7 @@ node_modules/
 .next/
 dist/
 coverage/
+*.tsbuildinfo
 
 # python
 __pycache__/
@@ -45,9 +42,12 @@ playwright/.auth/
 
 # local app cache / generated artifacts
 apps/api/.cache/
+.cache/
 .metrics_tmp/
 
-# local metrics outputs
+# local metrics / dump scripts and outputs
+dump_*.sh
+learning_dump*/
 ingest_response.json
 index_response.json
 search_response.json

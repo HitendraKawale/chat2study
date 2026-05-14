@@ -98,18 +98,21 @@ class ProviderFactory:
         if selected == "openai":
             return ChatOpenAI(
                 model=ProviderFactory.resolve_chat_model_name("openai"),
+                api_key=settings.openai_api_key,
                 temperature=0,
             )
 
         if selected == "anthropic":
             return ChatAnthropic(
                 model=ProviderFactory.resolve_chat_model_name("anthropic"),
+                api_key=settings.anthropic_api_key,
                 temperature=0,
             )
 
         if selected == "google":
             return ChatGoogleGenerativeAI(
                 model=ProviderFactory.resolve_chat_model_name("google"),
+                google_api_key=settings.google_api_key,
                 temperature=0,
             )
 
@@ -127,11 +130,17 @@ class ProviderFactory:
         selected = normalize_provider(provider or settings.default_embedding_provider)
 
         if selected == "openai":
-            return OpenAIEmbeddings(model=ProviderFactory.resolve_embedding_model_name("openai"))
+            return OpenAIEmbeddings(
+                model=ProviderFactory.resolve_embedding_model_name("openai"),
+                api_key=settings.openai_api_key,
+                dimensions=settings.embedding_dimensions,
+            )
 
         if selected == "google":
             return GoogleGenerativeAIEmbeddings(
-                model=ProviderFactory.resolve_embedding_model_name("google")
+                model=ProviderFactory.resolve_embedding_model_name("google"),
+                google_api_key=settings.google_api_key,
+                output_dimensionality=settings.embedding_dimensions,
             )
 
         if selected == "ollama":
