@@ -1,31 +1,14 @@
 
 # Chat2Study
 
-Chat2Study is a production-oriented monorepo that turns long AI chats into:
+Chat2Study turns long AI chats into structured study assets:
 
-- preserved artifacts
-- searchable RAG-ready knowledge
-- markdown study notes
-- visual study maps
+- preserved artifacts (HTML, text, screenshot, PDF)
+- vector-indexed chunks for semantic search
+- rendered markdown study notes
+- interactive visual concept maps
 
-You give it a chat URL that you are authorized to access. Chat2Study captures the page, stores artifacts, indexes the content, and lets you search or ask grounded questions over the captured chat. For dense technical content, it can also generate study notes and visual notes.
-
----
-
-## Why this project exists
-
-Long AI chats often contain useful decisions, explanations, code, architecture discussions, and research notes, but they are hard to revisit and even harder to study properly.
-
-Chat2Study solves that by turning a chat into a structured study asset:
-
-- **capture** the original page
-- **preserve** HTML, text, screenshot, and PDF
-- **index** the content into vector-searchable chunks
-- **retrieve** relevant chunks for semantic search and Q&A
-- **generate** study notes
-- **render** visual notes as concept maps
-
-This project was built as a real product foundation, not just a local script.
+You give it a chat URL you are authorized to access. Chat2Study captures the page, stores artifacts, indexes the content, and lets you search or ask grounded questions over it. For dense technical content it generates study notes and concept-map style visual notes.
 
 ---
 
@@ -33,276 +16,98 @@ This project was built as a real product foundation, not just a local script.
 
 ### Implemented
 
-- Next.js App Router frontend
-- FastAPI backend
+- JWT-based auth (register, login, protected routes)
+- Next.js 15 App Router frontend with nav, login/register pages
+- FastAPI backend with full REST API
 - PostgreSQL + pgvector persistence
-- MinIO-backed local artifact storage
+- MinIO-backed artifact storage
 - Playwright capture pipeline
-- LangGraph ingestion workflow
-- LangChain provider abstraction
-- semantic retrieval
-- grounded Q&A
-- study notes generation
-- visual notes JSON generation
-- visual notes graph rendering in the frontend
+- LangGraph 10-node ingestion workflow
+- Multi-provider abstraction (Ollama, OpenAI, Anthropic, Google)
+- Semantic chunk retrieval
+- Grounded Q&A
+- Markdown study notes with proper rendering + `.md` download
+- Visual notes with dagre-layouted, draggable React Flow graph
 - GitHub Actions CI
-- Dockerfiles for web and API
 
-### Not finished yet
+### Not yet implemented
 
-- production cloud deployment guide
-- auth / multi-user support
-- background worker deployment
-- browser extension
-- shareable study pages
-- citations in note output
-- stronger provider-specific extraction logic for each chat platform
+- Background worker deployment (Celery / queue-based async ingestion)
+- Browser extension ingestion
+- Shareable study pages
+- Citations in notes and Q&A answers
+- Per-user chat scoping (auth exists, data is currently global)
+- Production cloud deployment
 
 ---
 
-## Core features
+## Tech stack
 
-### 1. Chat ingestion
-Paste a chat URL and Chat2Study will:
+### Frontend
+- Next.js 15, React 19, TypeScript
+- Tailwind CSS v4
+- React Flow (`@xyflow/react`) + dagre layout
+- `react-markdown` + `remark-gfm`
 
-- create a chat record
-- run ingestion
-- capture the page with Playwright
-- extract visible text
-- save raw HTML
-- save a full-page screenshot
-- save a PDF snapshot
+### Backend
+- FastAPI, SQLAlchemy 2, Alembic, Psycopg 3
+- LangChain, LangGraph
+- `python-jose` (JWT), `bcrypt` (passwords)
 
-### 2. Artifact persistence
-Artifacts are stored in S3-compatible object storage.
+### Data / infra
+- PostgreSQL + pgvector
+- Redis (configured, used for future queue)
+- MinIO (S3-compatible local object storage)
+- Docker / Docker Compose
 
-Current local setup uses **MinIO**.
+### Capture / AI
+- Playwright (Chromium)
+- Google Gemini (recommended free option)
+- OpenAI, Anthropic, Ollama (all supported)
 
-Stored artifact types include:
-
-- `raw_html`
-- `visible_text`
-- `screenshot_png`
-- `snapshot_pdf`
-
-### 3. Vector indexing
-Captured text is chunked and embedded into a `pgvector`-backed `chunks` table.
-
-This enables:
-
-- semantic chunk search
-- grounded Q&A
-- note generation from indexed context
-
-### 4. Provider abstraction
-Chat and embedding providers are configurable.
-
-Supported chat providers:
-- Ollama
-- OpenAI
-- Anthropic
-- Google Gemini
-
-Supported embedding providers:
-- Ollama
-- OpenAI
-- Google Gemini
-
-### 5. Study notes
-The backend can generate markdown study notes with sections like:
-
-- summary
-- core ideas
-- important decisions
-- key terms
-- open questions
-- suggested follow-ups
-
-### 6. Visual notes
-The backend can also generate structured visual notes JSON:
-
-- summary cards
-- concept nodes
-- graph edges
-- suggested learner questions
-
-The frontend renders this as a graph using React Flow.
-
-### 7. Retrieval and grounded Q&A
-You can:
-
-- run semantic chunk search
-- ask questions over an indexed chat
-- see retrieved chunks used for answering
+### Tooling
+- pnpm, uv, Ruff, GitHub Actions
 
 ---
 
 ## Architecture overview
 
 ```text
-[ Next.js Web App ]
-        |
-        v
-[ FastAPI API ]
-        |
-        +------> [ Redis ]              (planned worker usage / future queue integration)
-        |
-        +------> [ PostgreSQL + pgvector ]
-        |
-        +------> [ MinIO / S3-compatible object storage ]
-        |
-        +------> [ Playwright capture ]
-        |
-        +------> [ LangGraph ingestion workflow ]
-                     |
-                     +--> capture
-                     +--> persist artifacts
-                     +--> index chunks
-                     +--> generate notes
-                     +--> generate visual notes
-````
-
-
-
-## Tech stack
-
-### Frontend
-
-* Next.js 15
-* React 19
-* TypeScript
-* Tailwind CSS v4
-* React Flow (`@xyflow/react`)
-
-### Backend
-
-* FastAPI
-* SQLAlchemy 2
-* Alembic
-* Psycopg 3
-* LangChain
-* LangGraph
-
-### Data / infra
-
-* PostgreSQL
-* pgvector
-* Redis
-* MinIO
-* Docker / Docker Compose
-
-### Capture / AI
-
-* Playwright
-* Ollama
-* OpenAI
-* Anthropic
-* Google Gemini
-
-### Tooling
-
-* pnpm
-* uv
-* Ruff
-* GitHub Actions
-
----
-
-## Monorepo structure
-
-```text
-chat2study/
-├── apps/
-│   ├── api/
-│   │   ├── app/
-│   │   │   ├── api/
-│   │   │   │   └── routes/
-│   │   │   ├── core/
-│   │   │   ├── db/
-│   │   │   ├── schemas/
-│   │   │   ├── services/
-│   │   │   │   └── capture/
-│   │   │   └── workflows/
-│   │   ├── alembic/
-│   │   ├── Dockerfile
-│   │   └── pyproject.toml
-│   └── web/
-│       ├── app/
-│       ├── components/
-│       ├── lib/
-│       ├── types/
-│       ├── Dockerfile
-│       ├── package.json
-│       └── next.config.ts
-├── workers/
-│   ├── ingest_worker/
-│   ├── index_worker/
-│   └── notes_worker/
-├── packages/
-│   ├── ui/
-│   └── shared-types/
-├── infra/
-│   ├── compose/
-│   │   └── postgres/
-│   │       └── init/
-│   └── scripts/
-├── docs/
-├── .github/
-│   ├── workflows/
-│   └── ISSUE_TEMPLATE/
-├── docker-compose.yml
-├── package.json
-├── pnpm-workspace.yaml
-└── .env.example
+[ Browser ]
+    |
+    v
+[ Next.js App Router ]  ──── JWT cookie auth ────
+    |
+    v  (REST + Bearer token)
+[ FastAPI ]
+    |
+    ├── PostgreSQL + pgvector  (chats, chunks, notes, jobs, users)
+    ├── MinIO / S3             (raw_html, visible_text, screenshot, PDF)
+    └── LangGraph ingestion workflow
+            ├── Playwright capture
+            ├── Artifact persistence
+            ├── Chunk + embed (Google / OpenAI / Ollama)
+            ├── Complexity scoring
+            ├── Study notes generation (LLM)
+            └── Visual notes generation (LLM → React Flow)
 ```
-
----
-
-## How the ingestion workflow works
-
-The ingestion pipeline is orchestrated with **LangGraph**.
-
-### Current flow
-
-1. load chat metadata
-2. select chat provider + embedding provider
-3. plan capture strategy
-4. capture the page using Playwright
-5. persist artifacts
-6. index the text into chunks + embeddings
-7. compute a complexity score
-8. optionally generate study notes
-9. optionally generate visual notes
-10. build final workflow result payload
-
-### Complexity behavior
-
-Auto-note generation depends on the computed complexity score.
-
-That means:
-
-* simple pages may not auto-generate notes
-* dense technical pages are more likely to trigger note generation
-* you can still trigger note generation manually from the UI or API
 
 ---
 
 ## Local development setup
 
-## Prerequisites
+### Prerequisites
 
-Make sure you have:
-
-* Node.js 22+
-* pnpm 10+
-* Python 3.11+
-* uv
-* Docker + Docker Compose
-* Ollama installed locally if you want free local model testing
+- Node.js 22+
+- pnpm 10+
+- Python 3.11+
+- uv
+- Docker + Docker Compose
+- A Google AI Studio API key (free) **or** Ollama for fully local use
 
 ---
 
-## 1. Clone the repo
+### 1. Clone
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/chat2study.git
@@ -311,15 +116,27 @@ cd chat2study
 
 ---
 
-## 2. Configure environment files
-
-### Root environment
+### 2. Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-### Web environment
+Open `.env` and fill in at minimum:
+
+```env
+# Free option — get your key at aistudio.google.com/apikey
+GOOGLE_API_KEY=your-key-here
+DEFAULT_CHAT_PROVIDER=google
+DEFAULT_EMBEDDING_PROVIDER=google
+GOOGLE_CHAT_MODEL=gemini-2.5-flash
+GOOGLE_EMBEDDING_MODEL=models/gemini-embedding-001
+
+# Auth secret — generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
+SECRET_KEY=change-me
+```
+
+For the web app:
 
 ```bash
 cp apps/web/.env.local.example apps/web/.env.local
@@ -327,58 +144,23 @@ cp apps/web/.env.local.example apps/web/.env.local
 
 ---
 
-## 3. Start local infra
+### 3. Start infrastructure
 
 ```bash
-docker compose up -d
-docker compose ps
+pnpm infra:up
 ```
 
-This starts:
+This starts PostgreSQL + pgvector, Redis, and MinIO.
 
-* PostgreSQL + pgvector
-* Redis
-* MinIO
-* MinIO bucket bootstrap
-
-### Useful local service URLs
-
-* Web app: `http://localhost:3000`
-* API docs: `http://localhost:8000/docs`
-* MinIO console: `http://localhost:9001`
-
-Default MinIO credentials:
-
-```text
-username: minioadmin
-password: minioadmin
-```
+| Service | URL |
+|---|---|
+| Web app | http://localhost:3000 |
+| API + Swagger | http://localhost:8000/docs |
+| MinIO console | http://localhost:9001 (minioadmin / minioadmin) |
 
 ---
 
-## 4. Start Ollama for local model use
-
-If you want free local testing with Ollama:
-
-```bash
-ollama serve
-```
-
-In another terminal:
-
-```bash
-ollama pull llama3.2:3b
-ollama pull nomic-embed-text
-```
-
-Default local model configuration in this project uses:
-
-* chat model: `llama3.2:3b`
-* embedding model: `nomic-embed-text`
-
----
-
-## 5. Start the API
+### 4. Start the API
 
 ```bash
 cd apps/api
@@ -390,7 +172,7 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ---
 
-## 6. Start the web app
+### 5. Start the web app
 
 From the repo root:
 
@@ -399,507 +181,344 @@ pnpm install
 pnpm web:dev
 ```
 
-Open:
-
-```text
-http://localhost:3000
-```
+Open `http://localhost:3000` — you'll be redirected to `/login`. Register an account and you're in.
 
 ---
 
-## Environment variables
+## AI provider options
 
-Below are the most important environment variables.
+The chat and embedding providers are independently configurable via env vars. No code changes needed.
 
-### Core app
+### Google AI Studio (recommended — free)
+
+Get a key at **aistudio.google.com/apikey** — no credit card required.
+
+```env
+GOOGLE_API_KEY=your-key
+DEFAULT_CHAT_PROVIDER=google
+DEFAULT_EMBEDDING_PROVIDER=google
+GOOGLE_CHAT_MODEL=gemini-2.5-flash
+GOOGLE_EMBEDDING_MODEL=models/gemini-embedding-001
+```
+
+### Anthropic
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+DEFAULT_CHAT_PROVIDER=anthropic
+ANTHROPIC_CHAT_MODEL=claude-haiku-4-5-20251001
+# Use an embedding provider separately (Google or OpenAI) — Anthropic has no embeddings API
+DEFAULT_EMBEDDING_PROVIDER=google
+```
+
+### OpenAI
+
+```env
+OPENAI_API_KEY=sk-...
+DEFAULT_CHAT_PROVIDER=openai
+DEFAULT_EMBEDDING_PROVIDER=openai
+OPENAI_CHAT_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+```
+
+### Ollama (fully local, free)
+
+```bash
+ollama serve
+ollama pull llama3.1:8b       # recommended minimum for notes generation
+ollama pull nomic-embed-text
+```
+
+```env
+DEFAULT_CHAT_PROVIDER=ollama
+DEFAULT_EMBEDDING_PROVIDER=ollama
+OLLAMA_CHAT_MODEL=llama3.1:8b
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+> **Note:** If you switch embedding models after indexing chats, re-index existing chats via `POST /api/v1/chats/{id}/index` — vectors from different models are not compatible.
+
+---
+
+## Environment variables reference
+
+### Core
 
 ```env
 PROJECT_NAME=Chat2Study
 NODE_ENV=development
-```
-
-### Web
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-WEB_PORT=3000
-```
-
-### API
-
-```env
-API_HOST=0.0.0.0
-API_PORT=8000
+SECRET_KEY=            # JWT signing secret (required — generate a random hex string)
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_DAYS=7
 ```
 
 ### Database
 
 ```env
-POSTGRES_DB=chat2study
-POSTGRES_USER=chat2study
-POSTGRES_PASSWORD=chat2study
-POSTGRES_PORT=5432
 DATABASE_URL=postgresql+psycopg://chat2study:chat2study@localhost:5432/chat2study
-```
-
-### Redis
-
-```env
-REDIS_PORT=6379
-REDIS_URL=redis://localhost:6379/0
 ```
 
 ### Object storage
 
 ```env
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin
-MINIO_PORT=9000
-MINIO_CONSOLE_PORT=9001
 S3_ENDPOINT=http://localhost:9000
 S3_ACCESS_KEY=minioadmin
 S3_SECRET_KEY=minioadmin
 S3_BUCKET=chat2study
-AWS_DEFAULT_REGION=us-east-1
 S3_FORCE_PATH_STYLE=true
 ```
 
-### Playwright
+### Providers
 
 ```env
-PLAYWRIGHT_HEADLESS=true
-PLAYWRIGHT_AUTH_STATE_PATH=playwright/.auth/default.json
-LOCAL_ARTIFACT_STAGING_DIR=.cache/artifacts
-```
+DEFAULT_CHAT_PROVIDER=google          # google | openai | anthropic | ollama
+DEFAULT_EMBEDDING_PROVIDER=google     # google | openai | ollama
 
-### Provider selection
+GOOGLE_API_KEY=
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
 
-```env
-DEFAULT_CHAT_PROVIDER=ollama
-DEFAULT_EMBEDDING_PROVIDER=ollama
+GOOGLE_CHAT_MODEL=gemini-2.5-flash
+GOOGLE_EMBEDDING_MODEL=models/gemini-embedding-001
+OPENAI_CHAT_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+ANTHROPIC_CHAT_MODEL=claude-haiku-4-5-20251001
+OLLAMA_CHAT_MODEL=llama3.1:8b
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 OLLAMA_BASE_URL=http://localhost:11434
 ```
 
-### Provider model names
-
-```env
-OPENAI_CHAT_MODEL=
-OPENAI_EMBEDDING_MODEL=
-ANTHROPIC_CHAT_MODEL=
-GOOGLE_CHAT_MODEL=
-GOOGLE_EMBEDDING_MODEL=
-OLLAMA_CHAT_MODEL=llama3.2:3b
-OLLAMA_EMBEDDING_MODEL=nomic-embed-text
-```
-
-### Retrieval / indexing / notes
+### Indexing / retrieval / notes
 
 ```env
 EMBEDDING_DIMENSIONS=768
 CHUNK_SIZE=1200
 CHUNK_OVERLAP=200
 RETRIEVAL_TOP_K=5
-NOTES_CONTEXT_CHAR_LIMIT=16000
+NOTES_CONTEXT_CHAR_LIMIT=80000
+```
+
+### Capture
+
+```env
+PLAYWRIGHT_HEADLESS=true
+LOCAL_ARTIFACT_STAGING_DIR=.cache/artifacts
 ```
 
 ---
 
-## Using the app
+## How ingestion works
 
-## Typical workflow
+The pipeline is a 10-node LangGraph state machine:
 
-### From the web UI
+1. **load_chat** — fetch chat + source metadata from DB
+2. **select_providers** — resolve chat and embedding providers from config
+3. **plan_capture** — choose browser strategy (authenticated for Claude.ai / ChatGPT / Gemini, generic otherwise)
+4. **execute_capture** — Playwright headless capture (HTML, text, screenshot, PDF)
+5. **persist_artifacts** — upload all artifacts to MinIO
+6. **index_chat** — chunk text, embed with configured provider, store in pgvector
+7. **classify_complexity_seed** — score content density to decide whether to auto-generate notes
+8. **generate_study_notes** — LLM markdown notes (if complexity threshold met)
+9. **generate_visual_notes** — LLM JSON graph for React Flow (if threshold met)
+10. **build_result_payload** — assemble final workflow result
 
-1. open `http://localhost:3000`
-2. paste a chat URL
-3. create + ingest
-4. open the chat detail page
-5. inspect artifacts
-6. search chunks
-7. ask grounded questions
-8. generate study notes manually if needed
-9. generate visual notes manually if needed
-
-### From the API
-
-#### Health
-
-```bash
-curl http://127.0.0.1:8000/api/v1/health
-```
-
-#### Providers
-
-```bash
-curl http://127.0.0.1:8000/api/v1/providers
-```
-
-#### Create a chat
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/chats" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://example.com",
-    "title": "Example capture",
-    "source_type": "web_chat_url"
-  }'
-```
-
-#### List chats
-
-```bash
-curl http://127.0.0.1:8000/api/v1/chats
-```
-
-#### Run ingestion
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/chats/CHAT_ID/ingest"
-```
-
-#### Check artifacts
-
-```bash
-curl http://127.0.0.1:8000/api/v1/chats/CHAT_ID/artifacts
-```
-
-#### Trigger indexing manually
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/chats/CHAT_ID/index"
-```
-
-#### Search indexed chunks
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/chats/CHAT_ID/search" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "What is this chat about?",
-    "top_k": 5
-  }'
-```
-
-#### Ask the chat
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/chats/CHAT_ID/ask" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "Summarize the main technical decisions in this chat.",
-    "top_k": 5
-  }'
-```
-
-#### Generate study notes manually
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/chats/CHAT_ID/notes/generate"
-```
-
-#### Generate visual notes manually
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/chats/CHAT_ID/visual-notes/generate"
-```
-
-#### Fetch notes bundle
-
-```bash
-curl http://127.0.0.1:8000/api/v1/chats/CHAT_ID/notes
-```
+Notes auto-generation can be triggered manually from the UI or API regardless of complexity score.
 
 ---
 
 ## API surface
 
-### Health / system
+All routes require a `Authorization: Bearer <token>` header except `/auth/register` and `/auth/login`.
 
-* `GET /api/v1/health`
-* `GET /api/v1/providers`
+### Auth
+
+```
+POST /api/v1/auth/register    { email, name, password } → { access_token }
+POST /api/v1/auth/login       { email, password }       → { access_token }
+GET  /api/v1/auth/me                                    → UserResponse
+```
+
+### System
+
+```
+GET /api/v1/health
+GET /api/v1/providers
+```
 
 ### Chats
 
-* `POST /api/v1/chats`
-* `GET /api/v1/chats`
+```
+POST /api/v1/chats             create a chat record
+GET  /api/v1/chats             list recent chats (up to 50)
+GET  /api/v1/chats/{id}        get a single chat
+```
 
 ### Ingestion / jobs
 
-* `POST /api/v1/chats/{chat_id}/ingest`
-* `GET /api/v1/jobs/{job_id}`
+```
+POST /api/v1/chats/{id}/ingest    run the full ingestion pipeline
+GET  /api/v1/jobs/{id}            poll job status
+```
 
 ### Artifacts
 
-* `GET /api/v1/chats/{chat_id}/artifacts`
-* `GET /api/v1/chats/{chat_id}/artifacts/{artifact_id}/download`
+```
+GET /api/v1/chats/{id}/artifacts
+GET /api/v1/chats/{id}/artifacts/{artifact_id}/download
+```
 
 ### Indexing / retrieval
 
-* `POST /api/v1/chats/{chat_id}/index`
-* `POST /api/v1/chats/{chat_id}/search`
-* `POST /api/v1/chats/{chat_id}/ask`
+```
+POST /api/v1/chats/{id}/index     re-index (use after switching embedding providers)
+POST /api/v1/chats/{id}/search    { query, top_k } → semantic chunk results
+POST /api/v1/chats/{id}/ask       { question, top_k } → grounded LLM answer
+```
 
 ### Notes
 
-* `GET /api/v1/chats/{chat_id}/notes`
-* `POST /api/v1/chats/{chat_id}/notes/generate`
-* `POST /api/v1/chats/{chat_id}/visual-notes/generate`
+```
+GET  /api/v1/chats/{id}/notes
+POST /api/v1/chats/{id}/notes/generate
+POST /api/v1/chats/{id}/visual-notes/generate
+GET  /api/v1/chats/{id}/notes/download     → .md file download
+```
 
 ---
 
 ## Frontend pages
 
-### Dashboard
+### `/login` and `/register`
 
-The dashboard includes:
+JWT-based auth. Token is stored in a cookie and sent as a Bearer header on all API requests. All other routes require a valid token (enforced by Next.js middleware).
 
-* ingest form
-* recent chats list
-* link into chat detail pages
+### `/` — Dashboard
 
-### Chat detail page
+- Ingest form with progress feedback
+- Recent chats list with color-coded status badges
+- Links to chat detail pages
 
-The chat detail page includes:
+### `/chats/[chatId]` — Chat detail
 
-* study notes panel
-* manual note generation actions
-* artifact metadata + download links
-* semantic search UI
-* grounded Q&A UI
-* visual notes cards
-* visual graph renderer
+- Study notes rendered with `react-markdown` (headers, code blocks, tables, lists)
+- Download study notes as `.md` file
+- Generate study notes / visual map buttons with spinner feedback
+- Visual concept map: dagre-layouted, color-coded by node kind, draggable
+- Semantic search and grounded Q&A panel
+- Artifact browser with download links
 
 ---
 
 ## Build and quality checks
 
-## Web build
-
 ```bash
-pnpm --filter @chat2study/web build
-```
+# Web build
+pnpm web:build
 
-## API lint
+# Web lint
+pnpm web:lint
 
-```bash
-cd apps/api
-uv sync
-uv run ruff check .
+# API lint
+cd apps/api && uv run ruff check .
+
+# API format
+cd apps/api && uv run ruff format .
+
+# New migration after model changes
+uv run alembic revision --autogenerate -m "description"
+uv run alembic upgrade head
 ```
 
 ---
 
 ## CI
 
-GitHub Actions currently checks:
+GitHub Actions (`.github/workflows/ci.yml`) runs on push and PRs:
 
-* API dependency install
-* API Ruff check
-* API import sanity check
-* web dependency install
-* web production build
-
-Workflow file:
-
-```text
-.github/workflows/ci.yml
-```
+- API: dependency install → Ruff lint → import check
+- Web: dependency install → production build
 
 ---
 
 ## Docker
 
-There are Dockerfiles for both services:
-
-* `apps/api/Dockerfile`
-* `apps/web/Dockerfile`
-
-This gives you a good foundation for container-based deployment later.
-
-### API image build
+Dockerfiles exist for both services:
 
 ```bash
 docker build -f apps/api/Dockerfile -t chat2study-api .
-```
-
-### Web image build
-
-```bash
 docker build -f apps/web/Dockerfile -t chat2study-web .
 ```
 
 ---
 
-## Current development notes
+## Deployment architecture
 
-### Notes may not auto-generate for simple pages
+This app cannot be deployed as a single unit because Playwright requires a persistent Linux environment with Chromium — incompatible with serverless platforms.
 
-Auto note generation depends on complexity scoring.
+| Component | Recommended host | Notes |
+|---|---|---|
+| Next.js frontend | Vercel | Zero-config, native Next.js support |
+| FastAPI backend | Railway / Render / Fly.io | Needs Dockerfile, persistent process for Playwright |
+| PostgreSQL | Neon (free) or Railway | Enable the pgvector extension |
+| MinIO / S3 | Cloudflare R2 (free 10 GB) or AWS S3 | Set `S3_FORCE_PATH_STYLE=false` for real S3 |
+| Redis | Upstash (free tier) | Used for future background jobs |
 
-That means:
+Environment variables to change for production:
 
-* `example.com` or very short pages may not generate notes automatically
-* manual generation endpoints and UI buttons still work
-
-### Ollama must be running for local provider use
-
-If you are using local Ollama providers, make sure:
-
-```bash
-ollama serve
-```
-
-and required models are installed.
-
-### Playwright browser install is required
-
-After Python dependencies are installed:
-
-```bash
-uv run playwright install chromium
+```env
+NODE_ENV=production
+SECRET_KEY=<strong random secret>
+DATABASE_URL=<managed postgres URL>
+REDIS_URL=<upstash redis URL>
+S3_ENDPOINT=<r2 or s3 endpoint>
+S3_FORCE_PATH_STYLE=false
+CORS_ORIGINS=["https://your-frontend-domain.com"]
 ```
 
 ---
 
 ## Troubleshooting
 
-## zsh dynamic-route path issue
+### Notes not auto-generating
 
-If you create a Next.js route like `[chatId]` in zsh, quote or escape the path:
+The complexity scorer may have rated the page as too simple. Use the **Generate** buttons in the UI or call the API endpoints directly — they always run regardless of score.
+
+### Playwright timeout on modern sites
+
+Some pages never reach `networkidle` (analytics, websockets). The capture waits for `domcontentloaded`, tries `load`, tries `networkidle` briefly, then continues regardless.
+
+### Switching embedding providers
+
+Vectors from different models are in different spaces and are not compatible. After changing `DEFAULT_EMBEDDING_PROVIDER`, re-index existing chats:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/chats/CHAT_ID/index \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### zsh bracket escaping
+
+When creating Next.js dynamic routes in zsh, quote paths with square brackets:
 
 ```bash
 mkdir -p 'apps/web/app/chats/[chatId]'
-touch 'apps/web/app/chats/[chatId]/page.tsx'
 ```
 
 ---
-
-## Next.js 15 route params typing
-
-Next.js 15 App Router treats dynamic route `params` as async in page props.
-
-Use:
-
-```tsx
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ chatId: string }>;
-}) {
-  const { chatId } = await params;
-}
-```
-
----
-
-## Playwright timeout on modern sites
-
-Some pages never become truly `networkidle` because of analytics, polling, or websockets.
-
-The capture logic was adjusted to:
-
-* wait for `domcontentloaded`
-* try `load`
-* try `networkidle` briefly
-* continue even if `networkidle` never happens
-
----
-
-## Notes show `null`
-
-If notes are `null` after ingestion, that may simply mean the complexity threshold did not trigger.
-
-You can still generate them manually using:
-
-* the frontend buttons
-* `/notes/generate`
-* `/visual-notes/generate`
-
----
-
-## Indexing issues with Ollama
-
-If indexing fails while using Ollama embeddings:
-
-1. make sure Ollama is running
-2. confirm the embedding model exists
-
-```bash
-ollama list
-```
-
-If needed:
-
-```bash
-ollama pull nomic-embed-text
-```
-
-
 
 ## Roadmap
 
-### Product roadmap
-
-* authentication and multi-user support
-* browser extension ingestion
-* shareable study pages
-* better per-platform extraction logic
-* citations in answer and note output
-* export notes as markdown / PDF / slides
-* background worker deployment
-* usage analytics
-* improved note quality and structured evaluation
-
-### Infra roadmap
-
-* cloud deployment guide
-* ECS / Amplify / S3 / RDS production setup
-* secret management
-* queue workers in production
-* observability dashboards
-* retries and dead-letter workflows
+- Background worker deployment (async ingestion with Celery)
+- Per-user chat scoping
+- Browser extension for one-click ingestion
+- Shareable study pages
+- Citations in answers and notes
+- Export notes as PDF / slides
+- Production deployment guide
 
 ---
-
-
-
-## Acknowledgements
-
-Built with:
-
-* Next.js
-* FastAPI
-* SQLAlchemy
-* Alembic
-* pgvector
-* Playwright
-* LangChain
-* LangGraph
-* Ollama
-* React Flow
-* MinIO
-
----
-
-## Future deployment note
-
-Deployment is intentionally left for a later phase.
-
-The current repo is already structured in a way that can be deployed to:
-
-* container platforms
-* managed PostgreSQL
-* S3-compatible object storage
-* Redis-compatible caches
-* cloud-hosted model providers
-
-A production deployment guide will be added later.
 
 ## License
 
-Released under the MIT License.
-
-See [LICENSE](./LICENSE) for the full text.
-
-
+Released under the MIT License. See [LICENSE](./LICENSE) for the full text.
